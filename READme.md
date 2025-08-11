@@ -24,7 +24,6 @@ This README is meant to be copy-pasted as-is into Canvas. It explains what the p
 * [Known Limitations](#known-limitations)
 * [Troubleshooting](#troubleshooting)
 * [Optional: Makefile](#optional-makefile)
-* [License](#license)
 
 ---
 
