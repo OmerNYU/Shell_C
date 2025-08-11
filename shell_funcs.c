@@ -1,36 +1,30 @@
 #include "shell_funcs.h"
 
-
-// Function Declarations for builtin shell commands
-
+// Builtin declarations (already in header, but implemented here)
 int lsh_cd(char **args);
 int lsh_help(char **args);
 int lsh_exit(char **args);
 
-
-
+// Builtin tables
 char *builtin_str[] = {
     "cd",
     "help",
     "exit"
 };
 
-
 int (*builtin_func[]) (char **) = {
     &lsh_cd,
     &lsh_help,
     &lsh_exit
-
 };
 
-int lsh_num_builtins() {
-    return sizeof(builtin_str) / sizeof(char *);
+int lsh_num_builtins(void) {
+    return (int)(sizeof(builtin_str) / sizeof(builtin_str[0]));
 }
-
 
 // Builtin Function Implementations
 
-int lsh_cd (char **args) {
+int lsh_cd(char **args) {
     if (args[1] == NULL) {
         fprintf(stderr, "lsh: expected argument to \"cd\"\n");
     } else {
@@ -43,36 +37,36 @@ int lsh_cd (char **args) {
 
 int lsh_launch(char **args)
 {
-  pid_t pid, wpid;
-  int status;
+    pid_t pid;
+    int status;
 
-  pid = fork();
-  if (pid == 0) {
-    // Child process
-    if (execvp(args[0], args) == -1) {
-      perror("lsh");
+    pid = fork();
+    if (pid == 0) {
+        // Child process
+        if (execvp(args[0], args) == -1) {
+            perror("lsh");
+        }
+        exit(EXIT_FAILURE);
+    } else if (pid < 0) {
+        // Error forking
+        perror("lsh");
+    } else {
+        // Parent process: wait until child exits or is signaled
+        do {
+            waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
-    exit(EXIT_FAILURE);
-  } else if (pid < 0) {
-    // Error forking
-    perror("lsh");
-  } else {
-    // Parent process
-    do {
-      wpid = waitpid(pid, &status, WUNTRACED);
-    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-  }
 
-  return 1;
+    return 1;
 }
 
 int lsh_help(char **args) {
-    int i;
+    (void)args; // silence unused-parameter warning
     printf("Omer Hayat's LSH\n");
     printf("Type program names and arguments, and hit enter.\n");
     printf("The following are built-in:\n");
 
-    for (i = 0; i < lsh_num_builtins(); i++) {
+    for (int i = 0; i < lsh_num_builtins(); i++) {
         printf(" %s\n", builtin_str[i]);
     }
     printf("Use the man command for information on other programs.\n");
@@ -80,18 +74,17 @@ int lsh_help(char **args) {
 }
 
 int lsh_exit(char **args) {
+    (void)args; // silence unused-parameter warning
     return 0;
 }
 
 int lsh_execute(char **args) {
-    int i;
-
     if (args[0] == NULL) {
         // An empty command was entered.
         return 1;
     }
 
-    for (i = 0; i < lsh_num_builtins(); i++) {
+    for (int i = 0; i < lsh_num_builtins(); i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
             return (*builtin_func[i])(args);
         }
@@ -99,4 +92,3 @@ int lsh_execute(char **args) {
 
     return lsh_launch(args);
 }
-

@@ -1,3 +1,4 @@
+#include "shell_funcs.h"
 
 #define LSH_RL_BUFSIZE 1024
 #define LSH_TOK_BUFSIZE 64
@@ -6,94 +7,76 @@
 char **lsh_split_line(char *line)
 {
     int bufsize = LSH_TOK_BUFSIZE, position = 0;
-    char **tokens = malloc(bufsize * sizeof(char*));
+    char **tokens = malloc(bufsize * sizeof *tokens);
     char *token;
 
-    if (!tokens)
-    {
-        fprintf(stderr, "lsh: allocation error \n");
+    if (!tokens) {
+        fprintf(stderr, "lsh: allocation error\n");
         exit(EXIT_FAILURE);
     }
 
     token = strtok(line, LSH_TOK_DELIM);
     while (token != NULL) {
-        tokens[position] =  token;
-        position++;
+        tokens[position++] = token;
 
-        if (position >= bufsize){
+        if (position >= bufsize) {
             bufsize += LSH_TOK_BUFSIZE;
-            tokens = realloc(tokens, bufsize * sizeofchar(char*));
-            if (!tokens) {
-                fprintf(stderr, "lsh: allocation error \n")
+            char **tmp = realloc(tokens, bufsize * sizeof *tokens);
+            if (!tmp) {
+                free(tokens);
+                fprintf(stderr, "lsh: allocation error\n");
                 exit(EXIT_FAILURE);
             }
+            tokens = tmp;
         }
 
         token = strtok(NULL, LSH_TOK_DELIM);
-
-
-
-
     }
     tokens[position] = NULL;
     return tokens;
-
-
 }
 
 char *lsh_read_line(void)
 {
     int bufsize = LSH_RL_BUFSIZE;
     int position = 0;
-    char *buffer = malloc(sizeof(char) * bufsize);
+    char *buffer = malloc(bufsize);
     int c;
 
-    if (!buffer) 
-    {
-        fprintf(stderr, "lsh: allocation error\n");
-        exit (EXIT_FAILURE);    
-    }
-
-
-
-while (1) 
-{
-    // Read a character
-    c = getchar();
-    
-    // If we hit EOF, replace it with a null character and return.
-    if (c == EOF || c == '\n')
-    {
-        buffer[position] = '\0';
-        reutn buffer;
-    } else {
-        buffer[position] = c;
-    }
-    position++;
-
-}
-
-// If we exceed the buffer, reallocate.
-
-if (position >= bufsize)
-{
-    bufsize += LSH_RL_BUFSIZE;
-    buffer = realloc(buffer, bufsize);
-    if (!buffer)
-    {
+    if (!buffer) {
         fprintf(stderr, "lsh: allocation error\n");
         exit(EXIT_FAILURE);
     }
-}
-} 
 
-void lsh_loop() {
+    while (1) {
+        c = getchar();
+
+        if (c == EOF || c == '\n') {
+            buffer[position] = '\0';
+            return buffer;
+        }
+
+        buffer[position++] = (char)c;
+
+        if (position >= bufsize) {
+            bufsize += LSH_RL_BUFSIZE;
+            char *tmp = realloc(buffer, bufsize);
+            if (!tmp) {
+                free(buffer);
+                fprintf(stderr, "lsh: allocation error\n");
+                exit(EXIT_FAILURE);
+            }
+            buffer = tmp;
+        }
+    }
+}
+
+void lsh_loop(void) {
     char *line;
     char **args;
     int status;
 
-    do 
-    {
+    do {
         printf("> ");
         line = lsh_read_line();
         args = lsh_split_line(line);
@@ -104,19 +87,8 @@ void lsh_loop() {
     } while (status);
 }
 
-
-
-
-int main (int argc, char **argv) {
-    // Load any config files
-
-    // Run command loop
+int main(int argc, char **argv) {
+    (void)argc; (void)argv;
     lsh_loop();
-
-    // Cleanup and exit
-
-
-
-
     return EXIT_SUCCESS;
 }
