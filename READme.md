@@ -7,8 +7,6 @@ A minimal, teaching-oriented shell that demonstrates core systems programming id
 * **Built-in commands**: `cd`, `help`, `exit`
 * Launching external programs with **fork/execvp** and **waitpid**
 
-This README is meant to be copy-pasted as-is into Canvas. It explains what the program does, how to build and run it, how the code is structured, and how to extend it.
-
 ---
 
 ## Table of Contents
